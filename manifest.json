@@ -1,0 +1,18 @@
+{
+    "manifest_version" : 2,
+    "name" : "Work IT",
+    "version" : "1.0",
+    "description" : "Purvish and Nikha Rocks Again!",
+    "icons" : {
+        "16" : "img/icon16.png"
+    },
+
+    "browser_action" : {
+        "default_icon" : "img/icon16.png",
+        "default_popup" : "popup.html"
+    },
+
+    "permissions" : [
+        "storage"
+    ]
+}
