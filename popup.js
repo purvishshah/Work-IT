@@ -1,14 +1,25 @@
-// $(document).ready(function(){
-//     $('#inputName').keyup(function(){
-//         $('#greet').text('Hello' + $('#inputName').val());
-//     })
-// });
+'use strict';
 
 window.onload = function() {
-    document.getElementById("demo").onclick = function() {myFunction()};
+    document.getElementById("later").onclick = function() {closeWindow()};
+    document.getElementById("imgClickAndChange").onclick = function() {changeImage()};
 }
 
-function myFunction() {
-    document.getElementById("demo").style.visibility = "hidden";
-    document.getElementById("gif").style.visibility = "visible";
+function changeImage() {
+    document.getElementById("character").src = "img/exercise_a.gif";
+    document.getElementById("character").style.width = "250px";
+    document.getElementById("character").style.float = "none";
+    document.getElementById("imgClickAndChange").style.visibility = "hidden";
+    document.getElementById("later").style.visibility = "hidden";
+    document.getElementById("later2").style.visibility = "hidden";
+    document.getElementById("header").innerHTML = "Lets do a <br> Sideways Stretch";
+    sendActivityCompMsg();
+}
+
+function closeWindow() {
+    window.close();
+}
+
+function sendActivityCompMsg() {
+    chrome.runtime.sendMessage({msg : "activityCompleted"});
 }

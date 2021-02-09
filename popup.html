@@ -3,15 +3,22 @@
     <head>
         <title>Work IT!</title>
         <script src="popup.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js""></script>
         <link rel="stylesheet" type="text/css" href="style.css">
     </head>
 
     <body>
-        <h2 id="greet"> Hello Nikha! </h2>
-        <div>
-            <button id="demo">Let's Get Started!</button>
+
+        <h2 id="header"> What exercise would you like to do? </h2>
+
+        <img id="character" style="width: 100px; float:left;" src="img/Character.png" alt="hot bandi">
+        
+        <div style="float:left; width: 150px;">
+        <button id="imgClickAndChange"  style = "width:180px" class="button">
+            Sideways Stretch</button>
+        <button id="later" style = "width:180px" class="button">Torso Stretch</button>
+        <button id="later2" style = "width:180px; margin-bottom: 10px;" class="button">Neck Rotation</button>
+
         </div>
-        <img id="gif" src="img/exercise_a.gif" alt= "exercise">
+        
     </body>
 </html>

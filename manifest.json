@@ -4,15 +4,31 @@
     "version" : "1.0",
     "description" : "Purvish and Nikha Rocks Again!",
     "icons" : {
-        "16" : "img/icon16.png"
+        "16" : "img/Active.png",
+        "48" : "img/img48.png"
     },
 
     "browser_action" : {
-        "default_icon" : "img/icon16.png",
+        "default_icon" : "img/Active.png",
+        "default_title": "Work IT",
         "default_popup" : "popup.html"
     },
 
     "permissions" : [
-        "storage"
-    ]
+        "storage",
+        "tabs",
+        "activeTab",
+        "idle",
+        "webNavigation"
+    ],
+
+    "background" : {
+        "scripts" : [
+            "background.js"
+        ],
+        "persistent" : false
+    },
+
+    "offline_enabled" : true
+
 }
