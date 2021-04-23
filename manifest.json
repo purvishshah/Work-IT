@@ -1,25 +1,22 @@
 {
     "manifest_version" : 2,
-    "name" : "Work IT",
-    "version" : "1.0",
-    "description" : "Purvish and Nikha Rocks Again!",
+    "name" : "Let's Move",
+    "version" : "1.4",
+    "description" : "Take healthy breaks while working",
     "icons" : {
         "16" : "img/Active.png",
-        "48" : "img/img48.png"
+        "48" : "img/Active.png"
     },
 
     "browser_action" : {
         "default_icon" : "img/Active.png",
-        "default_title": "Work IT",
+        "default_title": "Let's Move",
         "default_popup" : "popup.html"
     },
 
     "permissions" : [
         "storage",
-        "tabs",
-        "activeTab",
-        "idle",
-        "webNavigation"
+        "notifications"
     ],
 
     "background" : {

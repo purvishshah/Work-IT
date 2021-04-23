@@ -2,38 +2,39 @@
 
 var DEFAULT_UPDATE_INTERVAL = 1000;
 
-var TIME_LIMIT_IN_SEC_YELLOW = 2700;
-var TIME_LIMIT_IN_SEC_RED = 5400;
+var TIME_LIMIT_IN_SEC_YELLOW = 1800;
+var TIME_LIMIT_IN_SEC_RED = 2700;
 var CODE = "GREEN";
 var RESET_TIME = 0;
+var NOTIFICATION_CLEAR_TIME_IN_MS = 10000;
 
 onInit();
 
 function onInit() {
-    setInterval(runBG, DEFAULT_UPDATE_INTERVAL);
+    setInterval(updateTimer, DEFAULT_UPDATE_INTERVAL);
 }
 
-function runBG() {
+// function runBG() {
 
-    chrome.windows.getLastFocused({ populate: true }, function(currentWindow) {
-        if(currentWindow.focused) {
-            let activeTab = currentWindow.tabs.find(t => t.active === true);
-            chrome.storage.local.set({'activeTab' : activeTab.url});
-            if(activeTab !== undefined && isValidUrl(activeTab)) {
-                console.log("active tab is : " + activeTab.url );
+//     chrome.windows.getLastFocused({ populate: true }, function(currentWindow) {
+//         if(currentWindow.focused) {
+//             let activeTab = currentWindow.tabs.find(t => t.active === true);
+//             chrome.storage.local.set({'activeTab' : activeTab.url});
+//             if(activeTab !== undefined && isValidUrl(activeTab)) {
+//                 console.log("active tab is : " + activeTab.url );
 
-                chrome.idle.queryState(parseInt('120'), function(state) {
-                    if(state === 'idle' || state === 'locked') {
-                        resetTimer();
-                    } else {
-                        updateTimer();
-                    }
-                })
-            }
-        }
+//                 chrome.idle.queryState(parseInt('120'), function(state) {
+//                     if(state === 'idle' || state === 'locked') {
+//                         resetTimer();
+//                     } else {
+//                         updateTimer();
+//                     }
+//                 })
+//             }
+//         }
 
-    });
-}
+//     });
+// }
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if(request.msg == "activityCompleted") {
@@ -44,6 +45,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 function resetTimer() {
     console.log(" timer is reset");
     chrome.browserAction.setIcon({path: "img/Active.png"});
+    changeBadgeColor("green");
     CODE = "GREEN";
     chrome.storage.local.set({'timer' : parseInt(RESET_TIME)});
     chrome.browserAction.setBadgeText({text : ''});
@@ -65,6 +67,7 @@ function updateTimer() {
                 chrome.browserAction.setIcon({path: "img/Inactive_2.png"});
                 changeBadgeColor("red");
                 CODE = "RED";
+                notifyMe();
             } 
             // window.open("popup.html", "extension_popup", "width=300,height=400,status=no,scrollbars=yes,resizable=no");
             // chrome.tabs.create({url: "popup.html"});
@@ -78,15 +81,15 @@ function updateTimer() {
     })
 }
 
-function isValidUrl(tab) {
-    if(!tab 
-        || !tab.url 
-        || (tab.url.indexOf('http:') == -1 && tab.url.indexOf('https:') == -1) 
-        || tab.url.indexOf('chrome://') !== -1
-        || tab.url.indexOf('chrome://extensions') !== -1) 
-        return false;
-    return true;
-}
+// function isValidUrl(tab) {
+//     if(!tab 
+//         || !tab.url 
+//         || (tab.url.indexOf('http:') == -1 && tab.url.indexOf('https:') == -1) 
+//         || tab.url.indexOf('chrome://') !== -1
+//         || tab.url.indexOf('chrome://extensions') !== -1) 
+//         return false;
+//     return true;
+// }
 
 function isLimitExceeded(timeVal) {
     if(timeVal !== undefined && timeVal >= parseInt(TIME_LIMIT_IN_SEC_YELLOW)) return true;
@@ -112,6 +115,25 @@ function changeTimeFormat(time) {
 function changeBadgeColor(colorName) {
     chrome.browserAction.setBadgeBackgroundColor({color : colorName});
 }
+
+function notifyMe() {
+    chrome.notifications.create("", {
+        title : "Testing...",
+        message : " How about taking a break from work for a nice stretch?",
+        iconUrl : 'img/Active.png',
+        type : 'basic',
+        requireInteraction : true
+    }, function(notificationId) {
+        setTimeout(function() {
+            chrome.notifications.clear(notificationId, function(){});
+        }, NOTIFICATION_CLEAR_TIME_IN_MS);
+    });
+}
+
+chrome.notifications.onClicked.addListener(function(notificationId, byUser) {
+    window.open("popup.html", "extension_popup", "width=300,height=400,status=no,scrollbars=yes,resizable=yes");
+    chrome.notifications.clear(notificationId, function(){});
+});
 
 })();
 
