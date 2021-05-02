@@ -2,43 +2,83 @@
 
 var DEFAULT_UPDATE_INTERVAL = 1000;
 
-var TIME_LIMIT_IN_SEC_YELLOW = 1800;
-var TIME_LIMIT_IN_SEC_RED = 2700;
+var TIME_INTERVAL_IN_MIN = 45;
+var TIME_LIMIT_IN_SEC_YELLOW = TIME_INTERVAL_IN_MIN*60;
+var TIME_LIMIT_IN_SEC_RED = 2*TIME_INTERVAL_IN_MIN*60;
 var CODE = "GREEN";
 var RESET_TIME = 0;
 var NOTIFICATION_CLEAR_TIME_IN_MS = 10000;
+var BLOCKED_SITES = [];
 
 onInit();
 
 function onInit() {
-    setInterval(updateTimer, DEFAULT_UPDATE_INTERVAL);
+    setInterval(runBG, DEFAULT_UPDATE_INTERVAL);
 }
 
-// function runBG() {
+chrome.storage.local.get('blockedSites', function(sites) {
+    if(sites.blockedSites) {
+        BLOCKED_SITES = sites.blockedSites;
+    }
+})
 
-//     chrome.windows.getLastFocused({ populate: true }, function(currentWindow) {
-//         if(currentWindow.focused) {
-//             let activeTab = currentWindow.tabs.find(t => t.active === true);
-//             chrome.storage.local.set({'activeTab' : activeTab.url});
-//             if(activeTab !== undefined && isValidUrl(activeTab)) {
-//                 console.log("active tab is : " + activeTab.url );
+chrome.storage.local.get('TIME_INTERVAL', function(tiveVal) {
+    if(tiveVal.TIME_INTERVAL) {
+        TIME_INTERVAL_IN_MIN = tiveVal.TIME_INTERVAL;
+        updateIntervals();
+    }
+})
 
-//                 chrome.idle.queryState(parseInt('120'), function(state) {
-//                     if(state === 'idle' || state === 'locked') {
-//                         resetTimer();
-//                     } else {
-//                         updateTimer();
-//                     }
-//                 })
-//             }
-//         }
+function updateIntervals() {
+    TIME_LIMIT_IN_SEC_YELLOW = TIME_INTERVAL_IN_MIN*60;
+    TIME_LIMIT_IN_SEC_RED = 2*TIME_INTERVAL_IN_MIN*60;
+}
 
-//     });
-// }
+function runBG() {
+    chrome.windows.getLastFocused({ populate: true }, function(currentWindow) {
+        if(currentWindow.focused) {
+            let activeTab = currentWindow.tabs.find(t => t.active === true);
+            chrome.storage.local.set({'activeTab' : activeTab.url});
+            if(activeTab !== undefined) {
+                console.log("active tab is : " + activeTab.url );
+                let hostname = extractHostname(activeTab.url);
+                if(!isBlackListed(hostname)) {
+                    updateTimer();
+                } else {
+                    console.log("freeze timer");
+                }
+                // chrome.idle.queryState(parseInt('120'), function(state) {
+                //     if(state === 'idle' || state === 'locked') {
+                //         resetTimer();
+                //     } else {
+                //         updateTimer();
+                //     }
+                // })
+            }
+        } else updateTimer();
+    });
+}
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if(request.msg == "activityCompleted") {
         resetTimer();
+    } else if(request.msg == "blockedSitesUpdated") {
+        let newSite = request.value;
+        if(newSite) {
+            let new_hostname = extractHostname(newSite);
+            if(!isBlackListed(new_hostname)) {
+                // AVOIDING DUPLICACY: if site already exists in blocked list, do not add it again.
+                BLOCKED_SITES.push(extractHostname(newSite));
+                chrome.storage.local.set({'blockedSites' : BLOCKED_SITES});
+            }
+        }
+    } else if(request.msg == "resetBlockedList") {
+        BLOCKED_SITES = [];
+        chrome.storage.local.set({'blockedSites' : BLOCKED_SITES});
+    } else if(request.msg == "intervalChanged") {
+        TIME_INTERVAL_IN_MIN = request.value;
+        chrome.storage.local.set({'TIME_INTERVAL' : TIME_INTERVAL_IN_MIN});
+        updateIntervals();
     }
 })
 
@@ -91,6 +131,33 @@ function updateTimer() {
 //     return true;
 // }
 
+function extractHostname(url) {
+    var hostname;
+    if (url.indexOf("//") > -1) {
+        hostname = url.split('/')[2];
+    }
+    else {
+        hostname = url.split('/')[0];
+    }
+    hostname = hostname.split(':')[0];
+    hostname = hostname.split('?')[0];
+
+    if(hostname.indexOf('www.') > -1) {
+        hostname = hostname.split('www.')[1];
+    }
+    return hostname;
+}
+
+function isDomainEqual(first, second) {
+    return first === second;
+}
+
+function isBlackListed(domain) {
+    if(BLOCKED_SITES != undefined && BLOCKED_SITES.length > 0) {
+        return BLOCKED_SITES.find(site => isDomainEqual(extractHostname(site), extractHostname(domain))) != undefined;
+    } else return false;
+}
+
 function isLimitExceeded(timeVal) {
     if(timeVal !== undefined && timeVal >= parseInt(TIME_LIMIT_IN_SEC_YELLOW)) return true;
     return false;
@@ -130,10 +197,23 @@ function notifyMe() {
     });
 }
 
+
 chrome.notifications.onClicked.addListener(function(notificationId, byUser) {
     window.open("popup.html", "extension_popup", "width=300,height=400,status=no,scrollbars=yes,resizable=yes");
     chrome.notifications.clear(notificationId, function(){});
 });
+
+chrome.contextMenus.create({
+    id: "resetTimer",
+    title : "Reset timer",
+    contexts : ["browser_action"]
+});
+
+chrome.contextMenus.onClicked.addListener(function(clicked) {
+    if(clicked.menuItemId == "resetTimer") {
+        resetTimer();
+    }
+})
 
 })();
 

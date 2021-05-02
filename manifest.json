@@ -16,8 +16,12 @@
 
     "permissions" : [
         "storage",
-        "notifications"
+        "notifications",
+        "tabs",
+        "contextMenus"
     ],
+
+    "options_page" : "options.html",
 
     "background" : {
         "scripts" : [
