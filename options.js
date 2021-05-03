@@ -1,38 +1,32 @@
-'use strict';
+document.getElementById("mySelect").onchange = function() 
+    {
+        var newInterval = document.getElementById("mySelect").value;
+        alert(newInterval);
+        chrome.runtime.sendMessage({msg:'intervalChanged', value: newInterval})
+    }
 
 var items = [];
+var button;
 
-chrome.storage.local.get('blockedSites', function(sites) {
-    if(sites.blockedSites) {
-        items = sites.blockedSites;
+function blockSites() 
+    {
+        //Create an array of blocked sites
+        boxvalue = document.getElementById('box').value;
+        items.push(boxvalue);  
+        // document.getElementById('blockedSites').innerHTML = items;
+        console.log(items);
+
+        // Create a button of blocked sites for UI
+        button = document.createElement("button");
+        button.innerHTML =  document.getElementById('box').value;
+        
+
+        //Append to button group
+        var body = document.getElementsByClassName("blockedSites")[0];
+        body.appendChild(button);
+
+        // Reset input
+        document.getElementById('box').value = '';
+
+        return false;
     }
-    if(items && items.length > 0) {
-        document.getElementById('blockedSites').innerHTML = items;
-    }
-});
-
-chrome.storage.local.get('TIME_INTERVAL', function(timeVal) {
-    if(timeVal.TIME_INTERVAL) {
-        document.getElementById("mySelect").value = timeVal.TIME_INTERVAL;
-    }
-});
-
-document.getElementById("mySelect").onchange = function() {
-    var newInterval = document.getElementById("mySelect").value;
-    chrome.runtime.sendMessage({msg:'intervalChanged', value: newInterval})
-}
-
-document.getElementById("blockSitesForm").onsubmit = function(event) {
-    event.preventDefault();
-    let boxvalue = document.getElementById('box').value;
-    items.push(boxvalue);
-    document.getElementById('blockedSites').innerHTML = items;
-    chrome.runtime.sendMessage({msg:'blockedSitesUpdated', value: boxvalue});
-    document.getElementById('box').value = '';
-}
-
-document.getElementById("resetBlockedList").onclick = function() {
-    items = [];
-    document.getElementById('blockedSites').innerHTML = items;
-    chrome.runtime.sendMessage({msg:'resetBlockedList'});
-}
